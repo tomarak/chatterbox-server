@@ -10,9 +10,12 @@ this file and include it in basic-server.js so that it actually works.
 
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
-**************************************************************/
-
+//**************************************************************/
 var responseData = [];
+
+
+
+//**************************************************************/
 
 exports.requestHandler = function(request, response) {
   // Request and Response come from node's http module.
@@ -29,7 +32,7 @@ exports.requestHandler = function(request, response) {
   // Adding more logging to your server can be an easy way to get passive
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
-  console.log("Serving request type " + request.method + " for url " + request.url);
+  console.log('Serving request type ' + request.method + ' for url ' + request.url);
 
   // The outgoing status.
   var statusCode = 200;
@@ -41,11 +44,11 @@ exports.requestHandler = function(request, response) {
   //
   // You will need to change this if you are sending something
   // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = "text/plain";
+  headers['Content-Type'] = 'text/plain';
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
+  // response.writeHead(statusCode, headers);
 
   // Make sure to always call response.end() - Node may not send
   // anything back to the client until you do. The string you pass to
@@ -54,32 +57,41 @@ exports.requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  if (request.method === "POST") {
 
-    statusCode = 201;
+  if (request.method === 'GET') {
+    if (request.url === '/favicon.ico') {
+      response.writeHead(404, headers);
+      response.end();
+    } else {
+      var data = '';
+      request.on('data', function(chunk) {
+        data += chunk;
+      });
 
+      request.on('end', function() {
+        response.writeHead(statusCode, headers);
+        console.log('get endddddd');
+        //console.log(responseData);
+        // if (data !== undefined) { responseData[0] = data; }
+       console.log(JSON.parse(responseData));
+        response.end(JSON.stringify( {results: responseData} ));
+      });
+    }
+  }
 
-    var c = '';
+  if (request.method === 'POST') {
+    var data = '';
     request.on('data', function(chunk) {
-      c += chunk;
+      data += chunk;
     });
 
     request.on('end', function() {
-      responseData.push(c);
+      statusCode = 201;
       response.writeHead(statusCode, headers);
-      response.end(JSON.stringify( {results: []} ));
-    });
-
-  } else if(request.method === "GET"){
-
-    var c = '';
-    request.on('data', function(chunk) {
-      c += chunk;
-    });
-
-    request.on('end', function() {
-      responseData.push(c);
-      response.end(JSON.stringify( {results: responseData} ));
+      console.log('post endddddd');
+      if (data !== undefined) { responseData[0] = data; }
+      console.log(responseData);
+      response.end();
     });
 
   }
@@ -95,9 +107,9 @@ exports.requestHandler = function(request, response) {
 // Another way to get around this restriction is to serve you chat
 // client from this domain by setting up static file serving.
 var defaultCorsHeaders = {
-  "access-control-allow-origin": "*",
-  "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "access-control-allow-headers": "content-type, accept",
-  "access-control-max-age": 10 // Seconds.
+  'access-control-allow-origin': '*',
+  'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'access-control-allow-headers': 'content-type, accept',
+  'access-control-max-age': 10 // Seconds.
 };
 
